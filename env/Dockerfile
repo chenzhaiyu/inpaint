@@ -1,11 +1,11 @@
-FROM deepbase/pytorch:1.8.1
+FROM deepbase/pytorch:1.8.1_cu11
 
-ARG USER_ID=1011
-ARG GROUP_ID=1011
-ARG USER_NAME=docker
+ARG USER_ID=1002
+ARG GROUP_ID=1002
+ARG USER_NAME=zhaiyu
 
 COPY . /tmp
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 RUN CC="cc -mavx2" pip install -U --force-reinstall pillow-simd
 
