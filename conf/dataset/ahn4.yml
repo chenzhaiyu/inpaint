@@ -1,0 +1,10 @@
+_target_: dataset.inpaint.InpaintDataModule
+name: ahn4
+data:
+  train_dir: /data/ahn4/data_large
+  val_dir: /data/ahn4/val_large
+  test_dir: /data/ahn4/test_large
+mask:
+  train_dir: /data/mask_ahn4
+  val_dir: /data/mask_ahn4
+  test_dir: /data/mask_ahn4
