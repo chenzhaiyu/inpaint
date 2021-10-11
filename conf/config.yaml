@@ -21,4 +21,4 @@ seed: 2021
 
 hydra:
   run:
-    dir: /outputs/dfnet/${mode}/${dataset.name}/${model._target_}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ./outputs/dfnet/${mode}/${dataset.name}/${model._target_}/${now:%Y-%m-%d_%H-%M-%S}
