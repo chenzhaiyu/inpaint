@@ -5,6 +5,6 @@ data:
   val_dir: /data/places2/val_large
   test_dir: /data/places2/test_large
 mask:
-  train_dir: /data/mask
-  val_dir: /data/mask
-  test_dir: /data/mask
+  train_dir: /data/mask_freeform
+  val_dir: /data/mask_freeform
+  test_dir: /data/mask_freeform

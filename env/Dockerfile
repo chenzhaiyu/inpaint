@@ -1,7 +1,7 @@
 FROM deepbase/pytorch:1.8.1_cu11
 
 ARG USER_ID=1002
-ARG GROUP_ID=1002
+ARG GROUP_ID=1003
 ARG USER_NAME=zhaiyu
 
 COPY . /tmp
