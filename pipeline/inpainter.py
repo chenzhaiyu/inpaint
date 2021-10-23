@@ -76,11 +76,13 @@ class LitInpainter(LightningModule):
                 save_dir.mkdir(exist_ok=True, parents=True)
                 n = self.cfg.val_save.n_image_per_batch
                 full, alpha, fill = fulls[0], alphas[0], fills[0]
+
+                # unnormalizing to [0, 255] to round to nearest integer
                 save_image(
                     torch.cat((
                         img[:n], img_miss[:n],
                         alpha[:n], fill[:n], full[:n]), dim=0),
-                    save_dir / f'{batch_idx:09d}.jpg', nrow=n)
+                    save_dir / f'{batch_idx:09d}.tif', nrow=n)
         return loss
 
     def _log_metrics(self):

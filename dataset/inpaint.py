@@ -68,12 +68,12 @@ class InpaintDataModule(LightningDataModule):
             return transforms.Compose([
                 transforms.Resize((self.height, self.width)),
                 transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
+                # transforms.ToTensor(),
             ])
         else:
             return transforms.Compose([
                 transforms.Resize((self.height, self.width)),
-                transforms.ToTensor(),
+                # transforms.ToTensor(),
             ])
 
     def mask_transform(self, split):

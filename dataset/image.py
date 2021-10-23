@@ -1,6 +1,6 @@
 import os
-
-from torchvision import datasets
+from PIL import Image
+from torchvision import datasets, transforms
 
 
 class ImageDataset(datasets.DatasetFolder):
@@ -20,11 +20,33 @@ class ImageDataset(datasets.DatasetFolder):
                 if datasets.folder.is_image_file(path):
                     self.samples.append(path)
 
+    def custom_loader(self, path):
+        """
+        A replacement of the default (PIL) loader.
+        """
+        if path.endswith(".jpg"):
+            # fallback to default loader for masks
+            return self.loader(path)
+        elif path.endswith(".tif"):
+            with open(path, 'rb') as f:
+                img = Image.open(f)
+                """
+                Converts a PIL Image or numpy.ndarray (H x W x C) in the range
+                [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0]
+                if the PIL Image belongs to one of the modes (L, LA, P, I, F, RGB, YCbCr, RGBA, CMYK, 1)
+                or if the numpy.ndarray has dtype = np.uint8
+                In the other cases, tensors are returned without scaling.
+                """
+                tsr = transforms.ToTensor()(img)  # no scaling for tiff float (though in mode 'F')
+                tsr = (tsr + 10) / 100.0  # manual scaling to [0-1]
+                tsr = tsr.expand(3, -1, -1)
+                return tsr
+
     def __getitem__(self, index):
 
         path = self.samples[index]
         try:
-            sample = self.loader(path)
+            sample = self.custom_loader(path)
             if self.transform is not None:
                 sample = self.transform(sample)
         except:
