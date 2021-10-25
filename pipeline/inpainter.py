@@ -8,7 +8,6 @@ from torchvision.utils import save_image
 from pytorch_lightning.core import LightningModule
 from hydra.utils import instantiate
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +27,10 @@ class LitInpainter(LightningModule):
 
     def training_step(self, batch, batch_idx):
         img, mask = batch
+        # todo: use smaller image dimension (512 -> 256)
+        # todo: make this threshold a hydra config option
+        mask[mask < 0.9] = 0.0  # to mitigate interpolation by resizing
+        mask[mask >= 0.9] = 1.0  # to mitigate interpolation by resizing
         img_miss = img * mask
         output, _, _ = self(img_miss, mask)
         loss, loss_detail = self.loss(output, img, mask)
@@ -50,6 +53,9 @@ class LitInpainter(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         img, mask = batch
+        # todo: make this threshold a hydra config option
+        mask[mask < 0.9] = 0.0  # to mitigate interpolation by resizing
+        mask[mask >= 0.9] = 1.0  # to mitigate interpolation by resizing
         img_miss = img * mask
         fulls, alphas, fills = self(img_miss, mask)
         loss, loss_detail = self.loss(fulls, img, mask)
@@ -83,6 +89,48 @@ class LitInpainter(LightningModule):
                         img[:n], img_miss[:n],
                         alpha[:n], fill[:n], full[:n]), dim=0),
                     save_dir / f'{batch_idx:09d}.tif', nrow=n)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        img, mask = batch
+        # todo: make this threshold a hydra config option
+        mask[mask < 0.90] = 0.0  # to mitigate interpolation by resizing
+        mask[mask >= 0.90] = 1.0  # to mitigate interpolation by resizing
+        img_miss = img * mask
+        fulls, alphas, fills = self(img_miss, mask)
+        loss, loss_detail = self.loss(fulls, img, mask)
+
+        self.log(
+            'test_loss', loss, on_epoch=True, prog_bar=True)
+        self.log(
+            'test/mse', loss_detail['reconstruction_loss'],
+            on_epoch=True, prog_bar=True)
+        self.log(
+            'test/percep', loss_detail['perceptual_loss'], on_epoch=True)
+        self.log(
+            'test/style', loss_detail['style_loss'], on_epoch=True)
+        self.log(
+            'test/tv', loss_detail['total_variation_loss'], on_epoch=True)
+
+        if self.trainer.is_global_zero:
+            save_dir = Path(f'result/test/')
+            save_dir.mkdir(exist_ok=True, parents=True)
+            full, alpha, fill = fulls[0], alphas[0], fills[0]
+
+            if self.cfg.custom.verbose:
+                # save a stacked image of {input, masked, alpha, fill, full}
+                # unnormalizing to [0, 255] to round to nearest integer
+                save_image(
+                    torch.cat((
+                        img[:], img_miss[:],
+                        alpha[:], fill[:], full[:]), dim=0),
+                    save_dir / f'{batch_idx:09d}.tif', nrow=self.cfg.dataset.batch_size)  # nrow==batch_size
+            else:
+                # save only the prediction, and convert it back to the height value
+                prediction = full[:].numpy()
+                # todo: save geotiff
+                raise NotImplementedError
+
         return loss
 
     def _log_metrics(self):

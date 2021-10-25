@@ -24,7 +24,7 @@ class InpaintDataset(Dataset):
         self.mask = mask
         self.random_mask = random_mask
         self.n_mask = len(self.mask)
-    
+
     def __len__(self):
         return len(self.data)
 
@@ -43,7 +43,7 @@ class InpaintDataset(Dataset):
 class InpaintDataModule(LightningDataModule):
 
     def __init__(
-            self, name:str, data: Dict[str, Any], mask: Dict[str, Any],
+            self, name: str, data: Dict[str, Any], mask: Dict[str, Any],
             height: int = 512, width: int = 512,
             batch_size: int = 32, num_workers: int = 6,
             pin_memory: bool = False):

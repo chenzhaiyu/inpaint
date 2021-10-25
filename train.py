@@ -5,9 +5,7 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig
 import pytorch_lightning as pl
 from pytorch_lightning.plugins import DDPPlugin
-
 from utils.log import print_config, save_lr_finder
-
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +33,6 @@ def init_trainer(cfg):
 def main(cfg: DictConfig) -> None:
 
     print_config(cfg)
-
     pl._logger.handlers = []
     pl._logger.propagate = True
 
@@ -52,7 +49,6 @@ def main(cfg: DictConfig) -> None:
         logger.info(f"Suggestion: {lr_finder.suggestion()}")
     else:
         trainer.fit(model, datamodule)
-
         if cfg.run_test:
             trainer.test(model, datamodule=datamodule)
 
