@@ -20,12 +20,10 @@ run_test: false
 seed: 2021
 
 custom:
-  checkpoint: "/Users/zhaiyu/Workspace/inpaint-3channel/outputs/dfnet/debug/ahn4/model.dfnet.DFNet/archive/log/checkpoints/epoch=19-step=32019-val_loss=0.00.ckpt"
-  image_dir: "/Users/zhaiyu/Workspace/per_building/to_complete/images"
-  mask_dir: "/Users/zhaiyu/Workspace/per_building/to_complete/masks"
-  mask_suffix: ".jpg"
-  verbose: True
-
+  checkpoint: "/Users/zhaiyu/Workspace/inpaint-3channel/weights/best.ckpt"
+  image_dir: "/Users/zhaiyu/Workspace/per_building/tocomplete_samples/images"
+  mask_dir: "/Users/zhaiyu/Workspace/per_building/tocomplete_samples/masks"
+  verbose: false
 
 hydra:
   run:

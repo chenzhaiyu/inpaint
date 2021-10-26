@@ -151,3 +151,5 @@ cython_debug/
 # local data
 data/
 
+# weights
+weights/*.ckpt

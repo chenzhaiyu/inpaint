@@ -1,9 +1,8 @@
 import random
-from pathlib import Path
+from abc import ABC, ABCMeta
 from typing import Any, Callable, Optional, Dict
 
 import torch
-from hydra.utils import instantiate
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset
 from pytorch_lightning import LightningDataModule
@@ -46,7 +45,7 @@ class InpaintDataModule(LightningDataModule):
             self, name: str, data: Dict[str, Any], mask: Dict[str, Any],
             height: int = 512, width: int = 512,
             batch_size: int = 32, num_workers: int = 6,
-            pin_memory: bool = False):
+            pin_memory: bool = False, normaliser: Dict = None):
 
         super().__init__()
 
@@ -58,6 +57,7 @@ class InpaintDataModule(LightningDataModule):
         self.width = width
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.normaliser = normaliser
         self.pin_memory = pin_memory
 
     def setup(self, stage: Optional[str] = None):
@@ -96,10 +96,10 @@ class InpaintDataModule(LightningDataModule):
         dataset = InpaintDataset(
             ImageDataset(
                 self.data[f'{split}_dir'],
-                transform=self.data_transform(split)),
+                transform=self.data_transform(split), normaliser=self.normaliser),
             ImageDataset(
                 self.mask[f'{split}_dir'],
-                transform=self.mask_transform(split)),
+                transform=self.mask_transform(split), normaliser=self.normaliser),
             random_mask=(split == 'train')
         )
         loader = torch.utils.data.DataLoader(

@@ -8,6 +8,7 @@ from typing import Union, Text, List, BinaryIO, Optional
 import torch
 import torch.nn.functional as F
 from torchvision.utils import make_grid
+from PIL import Image
 
 
 def time2str(time_used):

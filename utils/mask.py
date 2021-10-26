@@ -44,7 +44,7 @@ max_angle = np.pi * 0.75
 def to_point(x, y):
     x = int(x * width)
     y = int(y * height)
-    return (x, y)
+    return x, y
 
 
 def random_stroke():
