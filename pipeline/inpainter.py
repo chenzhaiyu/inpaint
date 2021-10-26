@@ -2,11 +2,15 @@ import logging
 from pathlib import Path
 from typing import Dict, Tuple, Any
 
+import gdal
 import torch
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 from pytorch_lightning.core import LightningModule
 from hydra.utils import instantiate
+from PIL import Image
+import numpy as np
+from torchvision import transforms
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +25,9 @@ class LitInpainter(LightningModule):
         self.save_hyperparameters()
         self.model = instantiate(self.cfg.model)
         self.loss = instantiate(self.cfg.loss)
+        self.transforms = []   # for geotiff
+        self.projections = []  # for geotiff
+        self.dimensions = []   # for geotiff
 
     def forward(self, img_miss, mask):
         return self.model(img_miss, mask)
@@ -119,17 +126,30 @@ class LitInpainter(LightningModule):
 
             if self.cfg.custom.verbose:
                 # save a stacked image of {input, masked, alpha, fill, full}
-                # unnormalizing to [0, 255] to round to nearest integer
+                # unnormalising to [0, 255] to round to nearest integer
                 save_image(
                     torch.cat((
                         img[:], img_miss[:],
                         alpha[:], fill[:], full[:]), dim=0),
-                    save_dir / f'{batch_idx:09d}.tif', nrow=self.cfg.dataset.batch_size)  # nrow==batch_size
+                    save_dir / f'{batch_idx:09d}.tif', nrow=self.cfg.dataset.batch_size)
             else:
                 # save only the prediction, and convert it back to the height value
-                prediction = full[:].numpy()
-                # todo: save geotiff
-                raise NotImplementedError
+                # re-wrap to original resolution
+                prediction = full[:]
+                prediction = transforms.Resize((self.dimensions[batch_idx][1], self.dimensions[batch_idx][0]))(prediction)
+                array = torch.squeeze(prediction).cpu().numpy()[0]  # retrieve arbitrary band
+
+                # unnormalising to height field
+                # todo: with hrdra config
+                array = array * 100.0 - 10.0
+
+                # write out geotiff
+                driver = gdal.GetDriverByName('GTiff')
+                out = driver.Create(str(save_dir / f'{batch_idx:09d}.tif'), self.dimensions[batch_idx][0], self.dimensions[batch_idx][1], 1, gdal.GDT_Float32)
+                out.SetGeoTransform(self.transforms[batch_idx])  # sets the same geotransform as input
+                out.SetProjection(self.projections[batch_idx])   # sets the same projection as input
+                out.GetRasterBand(1).WriteArray(array)
+                out.FlushCache()
 
         return loss
 

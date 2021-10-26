@@ -17,7 +17,7 @@ class ImageDataset(datasets.DatasetFolder):
                     self.samples.append(path)
 
     @staticmethod
-    def loader(path, fill_nodata=False):
+    def loader(path):
         """
         A replacement of the default (PIL) loader.
         """

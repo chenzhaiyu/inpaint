@@ -79,16 +79,36 @@ def test_custom(cfg: DictConfig) -> None:
     if cfg.seed is not None:
         pl.seed_everything(cfg.seed)
 
-    model = LitInpainter(cfg)
-    model.load_from_checkpoint(cfg.custom.checkpoint)
-    model.cfg.dataset.batch_size = cfg.dataset.batch_size
+    # below seems to overwrite checkpoint
+    # model = LitInpainter(cfg)
+    # model.load_from_checkpoint(cfg.custom.checkpoint)
+    # model.cfg.dataset.batch_size = cfg.dataset.batch_size if cfg.custom.verbose else 1
 
-    # generate mask files, if they do not exist
+    model = LitInpainter.load_from_checkpoint(cfg.custom.checkpoint)
+    model.cfg = cfg
+    model.cfg.dataset.batch_size = cfg.dataset.batch_size if cfg.custom.verbose else 1
+
+    transforms = []
+    projections = []
+    dimensions = []
     for sample_path in ImageDataset(cfg.custom.image_dir).samples:
         path_mask = (Path(cfg.custom.mask_dir) / Path(sample_path).name).with_suffix(cfg.custom.mask_suffix)
+
+        # load transform and projection for geotiff output
+        if not cfg.custom.verbose:
+            ds = gdal.Open(sample_path)
+            transforms.append(ds.GetGeoTransform())
+            projections.append(ds.GetProjection())
+            dimensions.append((ds.RasterXSize, ds.RasterYSize))
+
         if not path_mask.exists():
-            # create mask file
+            # generate mask files, if they do not exist
             create_nodata_mask(sample_path, path_mask)
+
+    # todo: encapsulate
+    model.transforms = transforms
+    model.projections = projections
+    model.dimensions = dimensions
 
     trainer = init_trainer(cfg)
 
