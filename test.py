@@ -11,8 +11,7 @@ from dataset.image import ImageDataset
 from osgeo import gdal
 import numpy as np
 from PIL import Image
-import os
-import glob
+from tqdm import trange, tqdm
 from pathlib import Path
 import subprocess
 
@@ -61,6 +60,7 @@ def create_nodata_mask(path_image, path_mask):
     Create no-data masks for images with no-data pixels.
     No-data pixels are filled with 0s, and a no-data mask is created.
     """
+    path_mask.parent.mkdir(exist_ok=True, parents=True)
     assert path_image.endswith('.tif')
     image_gdal = gdal.Open(path_image)
     has_nodata, mask_nodata = nodata(image_gdal)
@@ -73,13 +73,15 @@ def prepare(input_dir, output_dir, suffix='.tif'):
     """
     Batch copy images to a specified directory.
     """
-    Path(output_dir).mkdir(exist_ok=True, parents=True)
-    for input_path in glob.glob(os.path.join(input_dir, '*')):
-        output_path = os.path.join(output_dir, Path(input_path).stem + suffix)
-        image = gdal.Open(input_path)
+    input_dir = Path(input_dir)
+    output_dir = Path(output_dir)
+    for input_path in tqdm(input_dir.rglob('*' + suffix)):
+        output_path = output_dir / input_path.relative_to(input_dir)
+        output_path.parent.mkdir(exist_ok=True, parents=True)
+        image = gdal.Open(str(input_path))
         has_nodata, _ = nodata(image)
         if has_nodata:
-            subprocess.run(["rsync"] + [input_path] + [output_path])
+            subprocess.run(["rsync"] + [str(input_path)] + [str(output_path)])
 
 
 @hydra.main(config_path='conf', config_name='config')
@@ -105,8 +107,8 @@ def test_custom(cfg: DictConfig) -> None:
     transforms = []
     dimensions = []
 
-    for sample_path in ImageDataset(cfg.custom.image_dir).samples:
-        path_mask = (Path(cfg.custom.mask_dir) / Path(sample_path).name).with_suffix('.jpg')
+    for sample_path in tqdm(ImageDataset(cfg.custom.image_dir).samples):
+        path_mask = (Path(cfg.custom.mask_dir) / Path(sample_path).relative_to(cfg.custom.image_dir)).with_suffix('.jpg')
 
         # load transform and projection for geotiff output
         if not cfg.custom.verbose:
@@ -135,3 +137,5 @@ def test_custom(cfg: DictConfig) -> None:
 if __name__ == '__main__':
     # test_split()  # run test on test split data
     test_custom()  # run test on custom data
+    # prepare(input_dir="/Users/zhaiyu/Workspace/data/ahn4_per_building/tif",
+    #         output_dir="/Users/zhaiyu/Workspace/data/ahn4_per_building/tocomplete_ams/images")
