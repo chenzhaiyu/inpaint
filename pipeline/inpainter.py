@@ -125,7 +125,7 @@ class LitInpainter(LightningModule):
                 prediction = full[:]
                 prediction = transforms.Resize((self.dimensions[batch_idx][1], self.dimensions[batch_idx][0]))(
                     prediction)
-                array = torch.squeeze(prediction).cpu().numpy()[0]  # retrieve arbitrary band
+                array = torch.squeeze(prediction, 0).cpu().numpy()[0]  # retrieve arbitrary band (here index 0)
 
                 # unnormalising to height field
                 array = array / self.cfg.dataset.normaliser.scale - self.cfg.dataset.normaliser.gain
