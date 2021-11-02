@@ -78,7 +78,6 @@ def test(cfg: DictConfig) -> None:
     # load parameters from checkpoint but overwrite cfg
     model = LitInpainter.load_from_checkpoint(cfg.dataset.data.checkpoint)
     model.cfg = cfg
-    model.cfg.dataset.batch_size = cfg.dataset.batch_size if cfg.verbose else 1
 
     if model.cfg.mode == 'debug':
         # todo: is it still the case?
