@@ -2,4 +2,4 @@
 mode: debug
 
 defaults:
-  - override /logging: null
+  - override /logging: csv

@@ -79,10 +79,6 @@ def test(cfg: DictConfig) -> None:
     model = LitInpainter.load_from_checkpoint(cfg.dataset.data.checkpoint)
     model.cfg = cfg
 
-    if model.cfg.mode == 'debug':
-        # todo: is it still the case?
-        logger.warning('Debug mode enabled. Set mode=run to avoid possible tensorboard logging exception.')
-
     # verbose=False is only for custom data
     if hasattr(model.cfg, 'verbose') and not model.cfg.verbose and not model.cfg.custom:
         logger.warning('"verbose=False" is only for custom data. Reset verbose=True.')
@@ -122,4 +118,4 @@ def test(cfg: DictConfig) -> None:
 
 
 if __name__ == '__main__':
-    test()  # run test on custom data
+    test()
