@@ -1,0 +1,22 @@
+_target_: dataset.inpaint.InpaintDataModule
+name: ahn4
+
+height: 512
+width: 512
+
+normaliser:
+  gain: 10.0
+  scale: 0.01
+  nodata: 0.0
+
+data:
+  train_dir: /home/zhaiyu/Datasets/dfnet/ahn4/data_large
+  val_dir: /home/zhaiyu/Datasets/dfnet/ahn4/val_large
+  test_dir: /home/zhaiyu/Datasets/dfnet/ahn4/test_large
+
+mask:
+  train_dir: /home/zhaiyu/Datasets/dfnet/mask_ahn4
+  val_dir: /home/zhaiyu/Datasets/dfnet/mask_ahn4
+  test_dir: /home/zhaiyu/Datasets/dfnet/mask_ahn4
+  threshold: 0.9
+

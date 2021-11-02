@@ -19,7 +19,7 @@ def get_activation(name):
     if name == 'relu':
         activation = nn.ReLU()
     elif name == 'elu':
-        activation == nn.ELU()
+        activation = nn.ELU()
     elif name == 'leaky_relu':
         activation = nn.LeakyReLU(negative_slope=0.2)
     elif name == 'tanh':
@@ -46,7 +46,8 @@ class Conv2dSame(nn.Module):
                 nn.Conv2d(in_channels, out_channels, kernel_size, stride, 0)
             )
 
-    def conv_same_pad(self, ksize, stride):
+    @staticmethod
+    def conv_same_pad(ksize, stride):
         if (ksize - stride) % 2 == 0:
             return (ksize - stride) // 2
         else:
@@ -68,7 +69,8 @@ class ConvTranspose2dSame(nn.Module):
             in_channels, out_channels, kernel_size, stride,
             padding, output_padding)
 
-    def deconv_same_pad(self, ksize, stride):
+    @staticmethod
+    def deconv_same_pad(ksize, stride):
         pad = (ksize - stride + 1) // 2
         outpad = 2 * pad + stride - ksize
         return pad, outpad
@@ -105,9 +107,7 @@ class EncodeBlock(nn.Module):
         self.c_in = in_channels
         self.c_out = out_channels
 
-        layers = []
-        layers.append(
-            Conv2dSame(self.c_in, self.c_out, kernel_size, stride))
+        layers = [Conv2dSame(self.c_in, self.c_out, kernel_size, stride)]
         if normalization:
             layers.append(get_norm(normalization, self.c_out))
         if activation:
@@ -132,9 +132,7 @@ class DecodeBlock(nn.Module):
 
         self.up = UpBlock(mode, scale, c_from_up, kernel_size=scale)
 
-        layers = []
-        layers.append(
-            Conv2dSame(self.c_in, self.c_out, kernel_size, stride=1))
+        layers = [Conv2dSame(self.c_in, self.c_out, kernel_size, stride=1)]
         if normalization:
             layers.append(get_norm(normalization, self.c_out))
         if activation:

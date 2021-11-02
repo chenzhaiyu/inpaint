@@ -3,7 +3,7 @@ defaults:
   - loss: inpaint
   - optim: adamw
   - scheduler: cosine
-  - dataset: [default, places2]
+  - dataset: [default, ahn4]
   - pipeline: inpainter
   - callbacks: [checkpoint, lr_monitor]
   - logging: null
@@ -19,6 +19,14 @@ val_save:
 run_test: false
 seed: 2021
 
+custom:
+  checkpoint: "/home/zhaiyu/Workspace/inpaint-3channel/weights/best.ckpt"
+  image_dir: "/home/zhaiyu/Datasets/dfnet/tocomplete_ams/4268"
+  mask_dir: "/home/zhaiyu/Datasets/dfnet/tocomplete_ams/masks"
+  mask_suffix: ".jpg"
+  verbose: false
+
+
 hydra:
   run:
-    dir: /outputs/dfnet/${mode}/${dataset.name}/${model._target_}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ./outputs/dfnet/${mode}/${dataset.name}/${model._target_}/${now:%Y-%m-%d_%H-%M-%S}
