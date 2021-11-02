@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 from torchvision import datasets, transforms
+from hydra.utils import get_original_cwd, to_absolute_path
 
 
 class ImageDataset(datasets.DatasetFolder):
@@ -10,7 +11,6 @@ class ImageDataset(datasets.DatasetFolder):
         self.transform = transform
         self.normaliser = normaliser
         self.samples = []
-
         for r, _, filenames in sorted(
                 os.walk(os.path.expanduser(self.data_dir), followlinks=True)):
             for filename in sorted(filenames):
@@ -41,6 +41,8 @@ class ImageDataset(datasets.DatasetFolder):
                 tsr[tsr < -1] = self.normaliser.nodata  # truncate no-data values (-3.4*10e+38) todo: robust catch
                 tsr = tsr.expand(3, -1, -1)
                 return tsr
+        else:
+            raise ValueError('Only JPEG and TIFF are supported')
 
     def __getitem__(self, index):
         """

@@ -1,10 +1,18 @@
 _target_: dataset.inpaint.InpaintDataModule
 name: places2
+
+height: 512
+width: 512
+
+num_workers: 4
+batch_size: 16
+
 data:
-  train_dir: /data/places2/data_large
-  val_dir: /data/places2/val_large
-  test_dir: /data/places2/test_large
+  train_dir: ${custom.data_dir}/places2/data_large
+  val_dir: ${custom.data_dir}/places2/val_large
+  test_dir: ${custom.data_dir}/places2/test_large
+
 mask:
-  train_dir: /data/mask_freeform
-  val_dir: /data/mask_freeform
-  test_dir: /data/mask_freeform
+  train_dir: ${custom.data_dir}/places2/masks
+  val_dir: ${custom.data_dir}/places2/masks
+  test_dir: ${custom.data_dir}/places2/masks

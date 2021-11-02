@@ -32,7 +32,7 @@ class LitInpainter(LightningModule):
         img, mask = batch
 
         # binary mask
-        mask[mask < self.cfg.dataset.mask.threshold] = 0.0  # to mitigate interpolation by resizing
+        mask[mask < self.cfg.dataset.mask.threshold] = 0.0   # to mitigate interpolation by resizing
         mask[mask >= self.cfg.dataset.mask.threshold] = 1.0  # to mitigate interpolation by resizing
 
         img_miss = img * mask
@@ -112,7 +112,7 @@ class LitInpainter(LightningModule):
             save_dir.mkdir(exist_ok=True, parents=True)
             full, alpha, fill = fulls[0], alphas[0], fills[0]
 
-            if self.cfg.custom.verbose:
+            if self.cfg.verbose:
                 # save a stacked image of {input, masked, alpha, fill, full}
                 # unnormalising to [0, 255] to round to nearest integer
                 save_image(
@@ -120,11 +120,10 @@ class LitInpainter(LightningModule):
                         img[:], img_miss[:],
                         alpha[:], fill[:], full[:]), dim=0),
                     save_dir / f'{batch_idx:09d}.tif', nrow=self.cfg.dataset.batch_size)
+
             else:
                 # re-wrap to original resolution
-                prediction = full[:]
-                prediction = transforms.Resize((self.dimensions[batch_idx][1], self.dimensions[batch_idx][0]))(
-                    prediction)
+                prediction = transforms.Resize((self.dimensions[batch_idx][1], self.dimensions[batch_idx][0]))(full)
                 array = torch.squeeze(prediction, 0).cpu().numpy()[0]  # retrieve arbitrary band (here index 0)
 
                 # unnormalising to height field

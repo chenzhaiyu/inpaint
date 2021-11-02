@@ -1,0 +1,9 @@
+# @package _global_
+pl_trainer:
+  precision: 32
+  gpus: 0
+
+dataset:
+  batch_size: 2
+
+data_dir: /Users/zhaiyu/Datasets/inpaint
