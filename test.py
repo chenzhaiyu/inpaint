@@ -81,6 +81,7 @@ def test(cfg: DictConfig) -> None:
     model.cfg.dataset.batch_size = cfg.dataset.batch_size if cfg.verbose else 1
 
     if model.cfg.mode == 'debug':
+        # todo: is it still the case?
         logger.warning('Debug mode enabled. Set mode=run to avoid possible tensorboard logging exception.')
 
     # verbose=False is only for custom data
@@ -112,8 +113,8 @@ def test(cfg: DictConfig) -> None:
 
         # override dataset.data.test_dir to custom images
         # override dataset.mask.test_dir to custom masks
-        cfg.dataset.data.test_dir = cfg.dataset.data.tocomplete_dir
-        cfg.dataset.mask.test_dir = cfg.dataset.mask.tocomplete_dir
+        model.cfg.dataset.data.test_dir = cfg.dataset.data.tocomplete_dir
+        model.cfg.dataset.mask.test_dir = cfg.dataset.mask.tocomplete_dir
 
     trainer = init_trainer(cfg)
     datamodule = instantiate(cfg.dataset)

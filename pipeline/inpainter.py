@@ -29,16 +29,16 @@ class LitInpainter(LightningModule):
         return self.model(img_miss, mask)
 
     def base_step(self, batch):
-        img, mask = batch
+        original, mask = batch
 
         # binary mask
         mask[mask < self.cfg.dataset.mask.threshold] = 0.0   # to mitigate interpolation by resizing
         mask[mask >= self.cfg.dataset.mask.threshold] = 1.0  # to mitigate interpolation by resizing
 
-        img_miss = img * mask
-        fulls, alphas, fills = self(img_miss, mask)
-        loss, loss_detail = self.loss(fulls, img, mask)
-        return loss, loss_detail, img, img_miss, fulls, alphas, fills
+        masked = original * mask
+        output, alpha, fill = self(masked, mask)
+        loss, loss_detail = self.loss(output, original, mask)
+        return loss, loss_detail, original, masked, output, alpha, fill
 
     def training_step(self, batch, batch_idx):
         loss, loss_detail, _, _, _, _, _ = self.base_step(batch)
@@ -59,7 +59,7 @@ class LitInpainter(LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, loss_detail, img, img_miss, fulls, alphas, fills = self.base_step(batch)
+        loss, loss_detail, original, masked, output, alpha, fill = self.base_step(batch)
 
         self.log(
             'val_loss', loss, on_epoch=True, prog_bar=True)
@@ -82,18 +82,30 @@ class LitInpainter(LightningModule):
                 save_dir = Path(f'result/epoch_{self.current_epoch}/')
                 save_dir.mkdir(exist_ok=True, parents=True)
                 n = self.cfg.val_save.n_image_per_batch
-                full, alpha, fill = fulls[0], alphas[0], fills[0]
+                output, alpha, fill = output[0], alpha[0], fill[0]
+                error = self.cfg.visual.error_scale * (output - original)
+
+                visuals = []
+                visuals_map = {
+                    'original': original,
+                    'masked': masked,
+                    'alpha': alpha,
+                    'fill': fill,
+                    'output': output,
+                    'error': error
+                }
+                for key in self.cfg.visual.keys():
+                    if key in visuals_map and self.cfg.visual[key]:
+                        visuals.append(visuals_map[key])
 
                 # unnormalising to [0, 255] to round to nearest integer
                 save_image(
-                    torch.cat((
-                        img[:n], img_miss[:n],
-                        alpha[:n], fill[:n], full[:n]), dim=0),
-                    save_dir / f'{batch_idx:09d}.tif', nrow=n)
+                    torch.cat(visuals, dim=0),
+                    save_dir / f'{batch_idx:09d}.png', nrow=min(n, self.cfg.dataset.batch_size))
         return loss
 
     def test_step(self, batch, batch_idx):
-        loss, loss_detail, img, img_miss, fulls, alphas, fills = self.base_step(batch)
+        loss, loss_detail, original, masked, output, alpha, fill = self.base_step(batch)
 
         self.log(
             'test_loss', loss, on_epoch=True, prog_bar=True)
@@ -110,16 +122,28 @@ class LitInpainter(LightningModule):
         if self.trainer.is_global_zero:
             save_dir = Path(f'result/test/')
             save_dir.mkdir(exist_ok=True, parents=True)
-            full, alpha, fill = fulls[0], alphas[0], fills[0]
+            output, alpha, fill = output[0], alpha[0], fill[0]
+            error = self.cfg.visual.error_scale * (output - original)
 
             if self.cfg.verbose:
+                visuals = []
+                visuals_map = {
+                    'original': original,
+                    'masked': masked,
+                    'alpha': alpha,
+                    'fill': fill,
+                    'output': output,
+                    'error': error
+                }
+                for key in self.cfg.visual.keys():
+                    if key in visuals_map and self.cfg.visual[key]:
+                        visuals.append(visuals_map[key])
+
                 # save a stacked image of {input, masked, alpha, fill, full}
                 # unnormalising to [0, 255] to round to nearest integer
                 save_image(
-                    torch.cat((
-                        img[:], img_miss[:],
-                        alpha[:], fill[:], full[:]), dim=0),
-                    save_dir / f'{batch_idx:09d}.tif', nrow=self.cfg.dataset.batch_size)
+                    torch.cat(visuals, dim=0),
+                    save_dir / f'{batch_idx:09d}.png', nrow=self.cfg.dataset.batch_size)
 
             else:
                 # re-wrap to original resolution
