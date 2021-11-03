@@ -1,0 +1,5 @@
+# @package _global_
+dataset:
+  batch_size: 16
+
+data_dir: /home/zhaiyu/Datasets/inpaint

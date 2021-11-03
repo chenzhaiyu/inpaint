@@ -9,6 +9,8 @@ defaults:
   - logging: null
   - mode: debug
   - pl_trainer: default
+  - device: macbook
+  - visual: default
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
@@ -16,17 +18,15 @@ val_save:
   n_image_per_batch: 8
   n_save: 11
 
-run_test: false
 seed: 2021
 
-custom:
-  checkpoint: "/home/zhaiyu/Workspace/inpaint-3channel/weights/best.ckpt"
-  image_dir: "/home/zhaiyu/Datasets/dfnet/tocomplete_ams/4268"
-  mask_dir: "/home/zhaiyu/Datasets/dfnet/tocomplete_ams/masks"
-  mask_suffix: ".jpg"
-  verbose: false
-
+custom: true
+verbose: true
 
 hydra:
   run:
-    dir: ./outputs/dfnet/${mode}/${dataset.name}/${model._target_}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ./outputs/${mode}/${dataset.name}/${now:%Y-%m-%d_%H-%M-%S}
+
+  sweep:
+    dir: ./outputs/multirun/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}

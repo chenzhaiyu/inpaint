@@ -1,0 +1,8 @@
+original: true
+masked: true
+alpha: false
+fill: false
+output: true
+error: true
+
+error_scale: 100

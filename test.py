@@ -18,27 +18,6 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(config_path='conf', config_name='config')
-def test_split(cfg: DictConfig) -> None:
-    """
-    Run test on test split with random masks
-    """
-    print_config(cfg)
-    pl._logger.handlers = []
-    pl._logger.propagate = True
-
-    if cfg.seed is not None:
-        pl.seed_everything(cfg.seed)
-
-    model = LitInpainter.load_from_checkpoint(cfg.custom.checkpoint)
-    model.cfg.dataset.batch_size = cfg.dataset.batch_size
-
-    trainer = init_trainer(cfg)
-    datamodule = instantiate(cfg.dataset)
-
-    trainer.test(model, datamodule=datamodule)
-
-
 def nodata(image):
     """
     Return no-data flag, and mask of no-data pixels, if any.
@@ -85,9 +64,9 @@ def prepare(input_dir, output_dir, suffix='.tif'):
 
 
 @hydra.main(config_path='conf', config_name='config')
-def test_custom(cfg: DictConfig) -> None:
+def test(cfg: DictConfig) -> None:
     """
-    Run test on custom images with no-data pixels.
+    Run test on default/custom images with no-data pixels.
     """
     print_config(cfg)
     pl._logger.handlers = []
@@ -96,46 +75,47 @@ def test_custom(cfg: DictConfig) -> None:
     if cfg.seed is not None:
         pl.seed_everything(cfg.seed)
 
-    # load retrained weights and configs
-    model = LitInpainter.load_from_checkpoint(cfg.custom.checkpoint)
-    model.cfg = cfg  # overwrite cfg
-    model.cfg.dataset.batch_size = cfg.dataset.batch_size if cfg.custom.verbose else 1
+    # load parameters from checkpoint but overwrite cfg
+    model = LitInpainter.load_from_checkpoint(cfg.dataset.data.checkpoint)
+    model.cfg = cfg
 
-    if model.cfg.mode == 'debug':
-        logger.warning('Debug mode enabled. Set mode=run to avoid possible tensorboard logging exception.')
+    # verbose=False is only for custom data
+    if hasattr(model.cfg, 'verbose') and not model.cfg.verbose and not model.cfg.custom:
+        logger.warning('"verbose=False" is only for custom data. Reset verbose=True.')
+        model.cfg.verbose = True
 
-    transforms = []
-    dimensions = []
+    if model.cfg.custom:
+        transforms = []
+        dimensions = []
 
-    for sample_path in tqdm(ImageDataset(cfg.custom.image_dir).samples):
-        path_mask = (Path(cfg.custom.mask_dir) / Path(sample_path).relative_to(cfg.custom.image_dir)).with_suffix('.jpg')
+        logger.info('No-data mask validation/generation')
+        for sample_path in tqdm(ImageDataset(cfg.dataset.data.tocomplete_dir).samples):
+            path_mask = (Path(cfg.dataset.mask.tocomplete_dir) / Path(sample_path).relative_to(
+                cfg.dataset.data.tocomplete_dir)).with_suffix('.jpg')
 
-        # load transform and projection for geotiff output
-        if not cfg.custom.verbose:
-            ds = gdal.Open(sample_path)
-            transforms.append(ds.GetGeoTransform())
-            dimensions.append((ds.RasterXSize, ds.RasterYSize))
+            # load transform and projection for geotiff output
+            if not model.cfg.verbose:
+                ds = gdal.Open(sample_path)
+                transforms.append(ds.GetGeoTransform())
+                dimensions.append((ds.RasterXSize, ds.RasterYSize))
 
-        # generate mask files, if they do not exist
-        if not path_mask.exists():
-            create_nodata_mask(sample_path, path_mask)
+            # generate mask files, if they do not exist
+            if not path_mask.exists():
+                create_nodata_mask(sample_path, path_mask)
 
-    model.transforms = transforms
-    model.dimensions = dimensions
+        model.transforms = transforms
+        model.dimensions = dimensions
+
+        # override dataset.data.test_dir to custom images
+        # override dataset.mask.test_dir to custom masks
+        model.cfg.dataset.data.test_dir = cfg.dataset.data.tocomplete_dir
+        model.cfg.dataset.mask.test_dir = cfg.dataset.mask.tocomplete_dir
 
     trainer = init_trainer(cfg)
-
-    # override dataset.data.test_dir to custom images
-    # override dataset.mask.test_dir to custom masks
-    cfg.dataset.data.test_dir = cfg.custom.image_dir
-    cfg.dataset.mask.test_dir = cfg.custom.mask_dir
     datamodule = instantiate(cfg.dataset)
 
     trainer.test(model, datamodule=datamodule)
 
 
 if __name__ == '__main__':
-    # test_split()  # run test on test split data
-    test_custom()  # run test on custom data
-    # prepare(input_dir="/Users/zhaiyu/Workspace/data/ahn4_per_building/tif",
-    #         output_dir="/Users/zhaiyu/Workspace/data/ahn4_per_building/tocomplete_ams/images")
+    test()
