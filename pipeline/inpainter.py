@@ -96,7 +96,7 @@ class LitInpainter(LightningModule):
                 }
                 for key in self.cfg.visual.keys():
                     if key in visuals_map and self.cfg.visual[key]:
-                        visuals.append(visuals_map[key])
+                        visuals.append(visuals_map[key][:n])
 
                 # unnormalising to [0, 255] to round to nearest integer
                 save_image(
@@ -157,24 +157,31 @@ class LitInpainter(LightningModule):
                         save_dir / f'{batch_idx:09d}.png', nrow=self.cfg.dataset.batch_size)
 
             else:
-                assert self.cfg.custom, 'verbose=False only applies to custom=True'
-                # save each output as a GeoTIFF only (no intermediates)
-                for i, one_output in enumerate(output):
-                    # re-wrap to original resolution
-                    index = batch_idx * self.cfg.dataset.batch_size + i
-                    prediction = transforms.Resize((self.dimensions[index][1], self.dimensions[index][0]))(one_output)
-                    array = torch.squeeze(prediction, 0).cpu().numpy()[0]  # retrieve arbitrary band (here index 0)
+                # verbose=False
+                if self.cfg.custom:
+                    # save each output as a GeoTIFF (no intermediates)
+                    for i, one_output in enumerate(output):
+                        # re-wrap to original resolution
+                        index = batch_idx * self.cfg.dataset.batch_size + i
+                        prediction = transforms.Resize((self.dimensions[index][1], self.dimensions[index][0]))(one_output)
+                        array = torch.squeeze(prediction, 0).cpu().numpy()[0]  # retrieve arbitrary band (here index 0)
 
-                    # unnormalising to height field
-                    array = array / self.cfg.dataset.normaliser.scale - self.cfg.dataset.normaliser.gain
+                        # unnormalising to height field
+                        array = array / self.cfg.dataset.normaliser.scale - self.cfg.dataset.normaliser.gain
 
-                    # write out geotiff
-                    driver = gdal.GetDriverByName('GTiff')
-                    out = driver.Create(str(save_dir / f'{index:09d}.tif'), self.dimensions[index][0],
-                                        self.dimensions[index][1], 1, gdal.GDT_Float32)
-                    out.SetGeoTransform(self.transforms[index])  # sets the same reference as input
-                    out.GetRasterBand(1).WriteArray(array)
-                    out.FlushCache()
+                        # write out geotiff
+                        driver = gdal.GetDriverByName('GTiff')
+                        out = driver.Create(str(save_dir / f'{index:09d}.tif'), self.dimensions[index][0],
+                                            self.dimensions[index][1], 1, gdal.GDT_Float32)
+                        out.SetGeoTransform(self.transforms[index])  # sets the same reference as input
+                        out.GetRasterBand(1).WriteArray(array)
+                        out.FlushCache()
+
+                else:
+                    # save each output as a PNG (no intermediates)
+                    for i, one_output in enumerate(output):
+                        index = batch_idx * self.cfg.dataset.batch_size + i
+                        save_image(one_output, save_dir / f'{index:09d}.png')
 
         return loss
 

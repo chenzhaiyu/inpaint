@@ -79,10 +79,9 @@ def test(cfg: DictConfig) -> None:
     model = LitInpainter.load_from_checkpoint(cfg.dataset.data.checkpoint)
     model.cfg = cfg
 
-    # verbose=False is only for custom data
-    if hasattr(model.cfg, 'verbose') and not model.cfg.verbose and not model.cfg.custom:
-        logger.warning('"verbose=False" is only for custom data. Reset verbose=True.')
-        model.cfg.verbose = True
+    # if hasattr(model.cfg, 'verbose') and not model.cfg.verbose and not model.cfg.custom:
+    #     logger.warning('"verbose=False" is only for custom data. Reset verbose=True.')
+    #     model.cfg.verbose = True
 
     if model.cfg.custom:
         transforms = []
