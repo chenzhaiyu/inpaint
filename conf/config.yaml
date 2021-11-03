@@ -25,4 +25,8 @@ verbose: true
 
 hydra:
   run:
-    dir: ./outputs/dfnet/${mode}/${dataset.name}/${model._target_}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ./outputs/${mode}/${dataset.name}/${now:%Y-%m-%d_%H-%M-%S}
+
+  sweep:
+    dir: ./outputs/multirun/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}
