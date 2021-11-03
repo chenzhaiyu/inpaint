@@ -126,6 +126,7 @@ class LitInpainter(LightningModule):
             error = self.cfg.visual.error_scale * (output - original)
 
             if self.cfg.verbose:
+                # save output and also intermediates
                 visuals = []
                 visuals_map = {
                     'original': original,
@@ -139,14 +140,25 @@ class LitInpainter(LightningModule):
                     if key in visuals_map and self.cfg.visual[key]:
                         visuals.append(visuals_map[key])
 
-                # save a stacked image of {input, masked, alpha, fill, full}
-                # unnormalising to [0, 255] to round to nearest integer
-                save_image(
-                    torch.cat(visuals, dim=0),
-                    save_dir / f'{batch_idx:09d}.png', nrow=self.cfg.dataset.batch_size)
+                if self.cfg.custom:
+                    # save custom images one by one
+                    # save a stacked image of selected composition of {input, masked, alpha, fill, full, error}
+                    # unnormalising to [0, 255] to round to nearest integer
+                    for i in range(len(original)):
+                        col = [torch.unsqueeze(visual[i], 0) for visual in visuals]
+                        save_image(torch.cat(col, dim=0), save_dir / f'{batch_idx * self.cfg.dataset.batch_size + i:09d}.png')
+
+                else:
+                    # save test split images batch by batch
+                    # save a stacked image of selected composition of {input, masked, alpha, fill, full, error}
+                    # unnormalising to [0, 255] to round to nearest integer
+                    save_image(
+                        torch.cat(visuals, dim=0),
+                        save_dir / f'{batch_idx:09d}.png', nrow=self.cfg.dataset.batch_size)
 
             else:
-                # save each sample as a GeoTIFF
+                assert self.cfg.custom, 'verbose=False only applies to custom=True'
+                # save each output as a GeoTIFF only (no intermediates)
                 for i, one_output in enumerate(output):
                     # re-wrap to original resolution
                     index = batch_idx * self.cfg.dataset.batch_size + i
