@@ -47,12 +47,12 @@ class LitInpainter(LightningModule):
         self.log(
             'train/mse', loss_detail['reconstruction_loss'],
             on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            'train/percep', loss_detail['perceptual_loss'],
-            on_step=True, on_epoch=True)
-        self.log(
-            'train/style', loss_detail['style_loss'],
-            on_step=True, on_epoch=True)
+        # self.log(
+        #     'train/percep', loss_detail['perceptual_loss'],
+        #     on_step=True, on_epoch=True)
+        # self.log(
+        #     'train/style', loss_detail['style_loss'],
+        #     on_step=True, on_epoch=True)
         self.log(
             'train/tv', loss_detail['total_variation_loss'],
             on_step=True, on_epoch=True)
@@ -66,10 +66,10 @@ class LitInpainter(LightningModule):
         self.log(
             'val/mse', loss_detail['reconstruction_loss'],
             on_epoch=True, prog_bar=True)
-        self.log(
-            'val/percep', loss_detail['perceptual_loss'], on_epoch=True)
-        self.log(
-            'val/style', loss_detail['style_loss'], on_epoch=True)
+        # self.log(
+        #     'val/percep', loss_detail['perceptual_loss'], on_epoch=True)
+        # self.log(
+        #     'val/style', loss_detail['style_loss'], on_epoch=True)
         self.log(
             'val/tv', loss_detail['total_variation_loss'], on_epoch=True)
 
@@ -112,10 +112,10 @@ class LitInpainter(LightningModule):
         self.log(
             'test/mse', loss_detail['reconstruction_loss'],
             on_epoch=True, prog_bar=True)
-        self.log(
-            'test/percep', loss_detail['perceptual_loss'], on_epoch=True)
-        self.log(
-            'test/style', loss_detail['style_loss'], on_epoch=True)
+        # self.log(
+        #     'test/percep', loss_detail['perceptual_loss'], on_epoch=True)
+        # self.log(
+        #     'test/style', loss_detail['style_loss'], on_epoch=True)
         self.log(
             'test/tv', loss_detail['total_variation_loss'], on_epoch=True)
 

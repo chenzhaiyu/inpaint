@@ -162,9 +162,9 @@ class InpaintLoss(nn.Module):
 
         self.reconstruction_loss = ReconstructionLoss()
 
-        self.vgg_feature = VGGFeature()
-        self.style_loss = StyleLoss()
-        self.perceptual_loss = PerceptualLoss()
+        # self.vgg_feature = VGGFeature()
+        # self.style_loss = StyleLoss()
+        # self.perceptual_loss = PerceptualLoss()
         self.tv_loss = TotalVariationLoss(c_img)
 
     def forward(self, fulls, target, mask):
@@ -190,18 +190,19 @@ class InpaintLoss(nn.Module):
             text_f = [targets[i] for i in self.l_text]
             text_t = [fulls[i] for i in self.l_text]
 
-            vgg_f = [self.vgg_feature(f) for f in text_f]
-            vgg_t = [self.vgg_feature(t) for t in text_t]
+            # vgg_f = [self.vgg_feature(f) for f in text_f]
+            # vgg_t = [self.vgg_feature(t) for t in text_t]
 
-            loss_style = self.style_loss(vgg_f, vgg_t) * self.w_style
-            loss_percep = self.perceptual_loss(vgg_f, vgg_t) * self.w_percep
+            # loss_style = self.style_loss(vgg_f, vgg_t) * self.w_style
+            # loss_percep = self.perceptual_loss(vgg_f, vgg_t) * self.w_percep
             loss_tv = self.tv_loss(text_f, mask) * self.w_tv
 
-            loss_total = loss_total + loss_style + loss_percep + loss_tv
+            # loss_total = loss_total + loss_style + loss_percep + loss_tv
+            loss_total = loss_total + loss_tv
 
             loss_list.update({
-                'perceptual_loss': loss_percep.item(),
-                'style_loss': loss_style.item(),
+                # 'perceptual_loss': loss_percep.item(),
+                # 'style_loss': loss_style.item(),
                 'total_variation_loss': loss_tv.item()
             })
 
