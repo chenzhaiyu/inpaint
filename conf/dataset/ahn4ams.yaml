@@ -1,0 +1,28 @@
+_target_: dataset.inpaint.InpaintDataModule
+name: ahn4ams
+
+height: 512
+width: 512
+
+num_workers: 8
+batch_size: 16
+
+normaliser:
+  gain: 10.0
+  scale: 0.01
+  nodata: 0.0
+
+data:
+  train_dir: ${data_dir}/ahn4ams/images/data_large
+  val_dir: ${data_dir}/ahn4ams/images/val_large
+  test_dir: ${data_dir}/ahn4ams/images/test_large
+  tocomplete_dir: ${data_dir}/ahn4ams/tocomplete_ams/images
+  checkpoint: ${data_dir}/ahn4ams/weights/best.ckpt
+
+mask:
+  train_dir: ${data_dir}/ahn4ams/masks
+  val_dir: ${data_dir}/ahn4ams/masks
+  test_dir: ${data_dir}/ahn4ams/masks
+  tocomplete_dir: ${data_dir}/ahn4ams/tocomplete_ams/masks
+  threshold: 0.9
+

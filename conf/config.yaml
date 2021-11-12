@@ -3,7 +3,7 @@ defaults:
   - loss: inpaint
   - optim: adamw
   - scheduler: cosine
-  - dataset: [default, ahn4]
+  - dataset: [default, ahn4nl]
   - pipeline: inpainter
   - callbacks: [checkpoint, lr_monitor]
   - logging: null
