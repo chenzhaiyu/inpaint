@@ -28,7 +28,7 @@ def nodata(image):
     value = band.GetNoDataValue()
     array = band.ReadAsArray()
     has_nodata = value in array
-    mask_nodata = np.zeros(array.shape)
+    mask_nodata = np.zeros(array.shape, dtype=bool)
     if has_nodata:
         mask_nodata = value != array
     return has_nodata, mask_nodata
@@ -88,9 +88,9 @@ def test(cfg: DictConfig) -> None:
         dimensions = []
 
         logger.info('No-data mask validation/generation')
-        for sample_path in tqdm(ImageDataset(cfg.dataset.data.tocomplete_dir).samples):
+        for sample_path in tqdm(ImageDataset(cfg.dataset.data.tocomplete_dir, data_type='image').samples):
             path_mask = (Path(cfg.dataset.mask.tocomplete_dir) / Path(sample_path).relative_to(
-                cfg.dataset.data.tocomplete_dir)).with_suffix('.jpg')
+                cfg.dataset.data.tocomplete_dir)).with_suffix('.tif')  # tif is sharp; do not use jpg
 
             # load transform and projection for geotiff output
             if not model.cfg.verbose:

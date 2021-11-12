@@ -6,10 +6,11 @@ from hydra.utils import get_original_cwd, to_absolute_path
 
 class ImageDataset(datasets.DatasetFolder):
 
-    def __init__(self, data_dir: str, transform=None, normaliser=None):
+    def __init__(self, data_dir: str, data_type, transform=None, normaliser=None):
         self.data_dir = data_dir
         self.transform = transform
         self.normaliser = normaliser
+        self.data_type = data_type
         self.samples = []
         for r, _, filenames in sorted(
                 os.walk(os.path.expanduser(self.data_dir), followlinks=True)):
@@ -22,11 +23,11 @@ class ImageDataset(datasets.DatasetFolder):
         """
         A replacement of the default (PIL) loader.
         """
-        if path.endswith(".jpg"):
+        if self.data_type == 'mask':
             # fallback to default loader for masks
             mask = datasets.folder.default_loader(path)
             return mask
-        elif path.endswith(".tif"):
+        elif self.data_type == 'image':
             with open(path, 'rb') as f:
                 img = Image.open(f)
                 """

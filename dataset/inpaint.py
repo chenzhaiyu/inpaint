@@ -94,10 +94,10 @@ class InpaintDataModule(LightningDataModule):
     def _dataloader(self, split):
         dataset = InpaintDataset(
             ImageDataset(
-                self.data[f'{split}_dir'],
-                transform=self.data_transform(split), normaliser=self.normaliser),
+                self.data[f'{split}_dir'], data_type='image',
+                transform=self.data_transform(split), normaliser=self.normaliser, ),
             ImageDataset(
-                self.mask[f'{split}_dir'],
+                self.mask[f'{split}_dir'], data_type='mask',
                 transform=self.mask_transform(split), normaliser=self.normaliser),
             random_mask=(split == 'train')
         )
